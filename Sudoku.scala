@@ -39,7 +39,7 @@ class Solver(puzzle: String) {
     }
   }
 
-  def doGuessingPasses(): Unit = {
+  def doGuessingPasses(isNew: Boolean): Unit = {
     // we need some sort of queue, so we can do something like
     // push(cell with 2) continue
     // is puzzle solved? cool
@@ -67,11 +67,26 @@ class Solver(puzzle: String) {
     //guess and push, 
     //now for every other one check the possible,
     //somehow recursively...
-    //
+    //ok to add the base case:
+    //if q is empty get first and guess, push on to q
+    //for remainder (setPossible ALL_NUM -- getTaken(c, q))
+    //  if (invalid) {
+    //    dq last change
+    //  }
+    //  if (found) {
+    //    add to q
+    //  }
+    // }
+    // if there was a change redo, if no change {
+    //  dq last change and try again
+    // }
     //this is the base case
     // for (c <- missing.filter(!_.isFound())) {
       
     // }
+    // 
+    // if isNew push to queue
+    // isNew will be true on initial and on nothing new changed
     
   }
 
@@ -105,6 +120,18 @@ class Solver(puzzle: String) {
       }
     }
   }
+}
+
+sealed class MyStack {
+  private var stack = new scala.collection.mutable.Stack[Cell]
+
+  def push(c: Cell) = stack.push(c)
+  def pop() = {
+    val last = stack.top
+    if (last.hasMoreGuesses)
+  }
+
+
 }
 
 class CellHolder() {
