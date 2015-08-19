@@ -3,9 +3,13 @@ import scala.math.Ordered.orderingToOrdered
 
 class Cell(val row: Int,val  col: Int) extends Ordered[Cell] {
   private var possible: Set[Int] = Set.empty[Int]
+  private var guesses: Set[Int] = Set.empty[Int]
+
   private var num: Int = -1
   private var guess: Int = -1
-  
+
+  def getPossible() =  possible
+
   def this(initNum: Int, row: Int, col: Int) {
     this(row, col);
     num = initNum
@@ -14,11 +18,17 @@ class Cell(val row: Int,val  col: Int) extends Ordered[Cell] {
 
   def setPossible(pos: Set[Int]) = {
     possible = pos
-
     possible.size match {
       case 0 => throw new RuntimeException("Not possible to have no possible")
       case 1 => num = possible.head
       case _ => ;
+    }
+  }
+
+  def setPossibleGuesses(pos: Set[Int]) = {
+    guesses = pos
+    if (guesses.size == 1) {
+      guess = guesses.head
     }
   }
 
@@ -27,19 +37,38 @@ class Cell(val row: Int,val  col: Int) extends Ordered[Cell] {
   def getNum() = num
   
   def compare(that: Cell): Int = (this.row, this.col) compare (that.row, that.col)
-  // private var testing: Option[Int] = None
 
+  def isValid = guesses.size > 0
+  def isGuessed = guess > 0
 
-  // def isFound = number match {
-  //   case Some(_) => true
-  //   case _ => possible.length == 1
-  // }
+  def resetGuesses() = {
+    guesses = Set(possible.toList:_*)
+    guess = -1
+  }
 
-  // def setTesting(t: Int) = {
-  //   testing = t
-  // }
+  def hasMoreGuesses = guesses.size > 0 
 
-  // def start() = preSet = possible.filter(_ => true)
+  def nextGuess() = {
+    guess = guesses.head
+    guesses = guesses.tail
+  }
 
-  // def removeOverlap()
+  def getGuess() = guess
+
+  def printGuess() = {
+    println("Current Guess: " + guess)
+    println("Remaining Guesses: " + guesses)
+    println("Is Guessed: " + isGuessed)
+  }
+
+  def snapshot(): Cell = {
+    val c = new Cell(this.row, this.col)
+    c.guess = this.guess
+    c.guesses = Set(this.guesses.toList:_*)
+    c
+  }
+
+  def markComplete() = num = guess
+  override def hashCode(): Int = (row * 7) + (col * 13)
+  def toEntry(): Tuple2[Int, Cell] = (hashCode(), this)
 }
