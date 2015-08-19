@@ -1,6 +1,30 @@
 package scala.sudoku
 import scala.math.Ordered.orderingToOrdered
 
+object Cell {
+  def getRowSquare(row: Int) = {
+    if (row < 3) {
+      Set(0, 1, 2)
+    } else if (row < 6) {
+      Set(3,4,5)
+    } else {
+      Set(6,7,8)
+    }
+  }
+
+
+  def getColSquare(col: Int) = {
+    if (col < 3) {
+      Set(0,3,6)
+    } else if (col < 6) {
+      Set(1,4,7)
+    } else {
+      Set(2,5,8)
+    }
+  }
+
+}
+
 class Cell(val row: Int,val  col: Int) extends Ordered[Cell] {
   private var possible: Set[Int] = Set.empty[Int]
   private var guesses: Set[Int] = Set.empty[Int]
@@ -8,13 +32,12 @@ class Cell(val row: Int,val  col: Int) extends Ordered[Cell] {
   private var num: Int = -1
   private var guess: Int = -1
 
-  def getPossible() =  possible
-
   def this(initNum: Int, row: Int, col: Int) {
     this(row, col);
     num = initNum
-  }
-  
+  }  
+
+  lazy val square = Cell.getRowSquare(row).intersect(Cell.getColSquare(col)).head
 
   def setPossible(pos: Set[Int]) = {
     possible = pos
@@ -70,5 +93,12 @@ class Cell(val row: Int,val  col: Int) extends Ordered[Cell] {
 
   def markComplete() = num = guess
   override def hashCode(): Int = (row * 7) + (col * 13)
+  override def equals(o: Any) = {
+    if (o.isInstanceOf[Cell]) {
+      o.asInstanceOf[Cell].hashCode == this.hashCode
+    } else {
+      false
+    }
+  }
   def toEntry(): Tuple2[Int, Cell] = (hashCode(), this)
 }
