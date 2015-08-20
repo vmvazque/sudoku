@@ -14,8 +14,9 @@ class Solver(puzzle: String) {
   var map = Map.empty[Int, Map[Int, Cell]]
   // var map = Map.empty[Cell, Set[Cell]]
   var guessable = Set.empty[Cell]
+  var numChecksCalled = 0
   //keep a map of which values for cells cause errors so we dont check them again
-  var errMap = Map.empty[Int, Set[Int]]
+  // var errMap = Map.empty[Int, Set[Int]]
 
   def buildPuzzle() =  {
     var i = 0
@@ -56,6 +57,8 @@ class Solver(puzzle: String) {
       printRows()
       holder.validateAll()
     }
+
+    println("Num Checks Called: " + numChecksCalled)
   }
 
   def printComplete() = {
@@ -83,9 +86,9 @@ class Solver(puzzle: String) {
     if (top.hasMoreGuesses) {
       println("Has more guesses, advancing")
       top.nextGuess()
-      if (!isValidGuess(top)) {
-        advanceGuess(stack)
-      }
+      // if (!isValidGuess(top)) {
+      //   advanceGuess(stack)
+      // }
       guessable = map(top.hashCode).updated(top.hashCode,top).values.map(_.snapshot()).toSet
       // guessable = (map(top) + top).map(_.snapshot())
       //the problem right now is this sets guessable to be a set of things then
@@ -111,8 +114,45 @@ class Solver(puzzle: String) {
     }
   }
 
-  private def isValidGuess(c: Cell): Boolean = {
-    !errMap.getOrElse(c.hashCode(), Set.empty[Int]).contains(c.getGuess)
+  // private def isValidGuess(c: Cell): Boolean = {
+  //   !errMap.getOrElse(c.hashCode(), Set.empty[Int]).contains(c.getGuess)
+  // }
+
+  def getNextCell(stack: Stack[Cell]): Cell = {
+    val notGuessed = guessable.filter(!_.isGuessed).toList
+    def getRandom() = {
+      notGuessed.head
+    }
+
+    def getSameRow(c: Cell): Option[Cell] = {
+      notGuessed.filter(_.row == c.row) match {
+        case Nil => None
+        case h::tail => Some(h)
+      }
+    }
+
+    def getSameCol(c: Cell): Option[Cell] = {
+      notGuessed.filter(_.col == c.col) match {
+        case Nil => None
+        case h::tail => Some(h)
+      }
+    }
+
+    def getSameSquare(c: Cell): Option[Cell] = {
+      notGuessed.filter(_.square == c.square) match {
+        case Nil => None
+        case h::tail => Some(h)
+      }
+    }
+
+    //ok for this one we want to get something in the same row, column or square
+    stack.size match {
+      case 0 => getRandom()
+      case _ => {
+        val c = stack.top
+        List(getSameRow(c), getSameCol(c), getSameSquare(c), Some(getRandom())).flatten.head
+      }
+    }
   }
 
   def setGuessableMap(c: Cell): Unit = {
@@ -130,7 +170,10 @@ class Solver(puzzle: String) {
 
   def doGuesses(stack: Stack[Cell], add: Boolean): Unit = {
     if (add) {
-      val c = guessable.filter(!_.isGuessed).head
+      //the next guessable one for now will be the one with the least 
+      //#of guesses
+      // val c = guessable.filter(!_.isGuessed).head/*.toList.sortWith(_.getGuessable < _.getGuessable).head*/
+      val c = getNextCell(stack) 
       stack.push(c)
       //map is [Int, Map[Int, Cell]]
       // map = map + (( c.hashCode, guessable.map(_.snapshot()) ))
@@ -152,7 +195,7 @@ class Solver(puzzle: String) {
       }
     } else {
       println("Guess failed, trying again")
-      addFailed(stack)
+      // addFailed(stack)
       //the problem is around here somewhere
       //basically we dont want to undo ALL changes
       //so if n1 changes n3 but doesnt set it, then n2 changes
@@ -173,14 +216,15 @@ class Solver(puzzle: String) {
     }
   }
 
-  private def addFailed(stack: Stack[Cell]) = {
-    //do nothing cause that makes no sense at all, im dumb
-    // val top = stack.top
-    // var errors = errMap.getOrElse(top.hashCode(), Set.empty[Int])
-    // errMap = errMap.updated(top.hashCode(), errors + top.getGuess())
-  }
+  // private def addFailed(stack: Stack[Cell]) = {
+  //   //do nothing cause that makes no sense at all, im dumb
+  //   // val top = stack.top
+  //   // var errors = errMap.getOrElse(top.hashCode(), Set.empty[Int])
+  //   // errMap = errMap.updated(top.hashCode(), errors + top.getGuess())
+  // }
 
   private def checkGuess(): Boolean = {
+    numChecksCalled += 1
     var change = false
     for (c <- guessable.filter(!_.isGuessed)) {
       c.setPossibleGuesses(ALL_NUM -- holder.getTaken(c) -- guessHolder.getTaken(c))
@@ -282,15 +326,15 @@ object main extends App {
     """.stripMargin
 
   val hard = """
-  |???84???9
-  |??1?????5
-  |8???2146?
-  |7?8????9?
-  |?????????
-  |?5????3?1
-  |?2491???7
-  |9?????5??
-  |3???84???
+  |??? 84? ??9
+  |??1 ??? ??5
+  |8?? ?21 46?
+  |7?8 ??? ?9?
+  |??? ??? ???
+  |?5? ??? 3?1
+  |?24 91? ??7
+  |9?? ??? 5??
+  |3?? ?84 ???
   """.stripMargin
 
   var extreme = """
@@ -319,18 +363,18 @@ object main extends App {
   // m.buildPuzzle()
   // m.solve()
 
-  println("Medium")
-  val me = new Solver(medium)
-  me.buildPuzzle()
-  me.solve()
+  // println("Medium")
+  // val me = new Solver(medium)
+  // me.buildPuzzle()
+  // me.solve()
   // solver.buildPuzzle()
   // solver.doPasses()
   // solver.printRows
   // 
-  // println("EXTREME!!")
-  // val e = new Solver(extreme)
-  // e.buildPuzzle()
-  // e.solve()
+  println("EXTREME!!")
+  val e = new Solver(extreme)
+  e.buildPuzzle()
+  e.solve()
 
 
 }

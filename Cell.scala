@@ -69,6 +69,7 @@ class Cell(val row: Int,val  col: Int) extends Ordered[Cell] {
     guess = -1
   }
 
+  def getGuessable = guesses.size
   def hasMoreGuesses = guesses.size > 0 
 
   def nextGuess() = {
